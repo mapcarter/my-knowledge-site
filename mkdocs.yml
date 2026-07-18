@@ -1,0 +1,71 @@
+site_name: 我的科研知识库
+site_author: 你的名字
+site_description: 交通预测 · AI 大模型 · 嵌入式系统 等技术笔记与总结
+site_url: https://mapcarter.github.io/my-knowledge-site/   # 重要：SEO/canonical 都靠它
+
+theme:
+  name: material
+  language: zh
+  font: false                                  # 禁用 Google Fonts（国内慢/被墙），改用自托管思源宋体
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换到暗色
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换到亮色
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.arithmatex:        # 公式支持（科研必备）
+      generic: true
+  - pymdownx.emoji:
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+plugins:
+  - search:
+      lang: zh                  # 中文搜索；需安装 jieba（构建时分词）
+
+# ===== 公式渲染必须有这两个 JS，否则 LaTeX 不显示 =====
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+# ===== 自托管思源宋体（中文衬线）替代 Google Fonts =====
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  generator: false             # 去掉页脚 "Made with Material"

@@ -1,0 +1,17 @@
+/* 中文衬线：思源宋体（Source Han Serif SC） */
+@font-face {
+  font-family: "Source Han Serif SC";
+  src: url("../assets/fonts/SourceHanSerifSC-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+/* 代码等宽：JetBrains Mono */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+:root {
+  --md-text-font: "Source Han Serif SC", "Source Serif 4", "Songti SC", serif;
+  --md-code-font: "JetBrains Mono", "Fira Code", "SFMono-Regular",
+                  Consolas, "Liberation Mono", monospace;
+}

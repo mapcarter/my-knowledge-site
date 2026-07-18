@@ -1,0 +1,8 @@
+site/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+vendor/
+glyphs.txt
+glyphs_mono.txt
