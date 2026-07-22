@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""把笔记连同图片同步进 docs/，采用"每篇笔记一个文件夹"结构，彻底避免同名图片冲突。
+"""把笔记同步进 docs/，文章直接放在目标二级目录下。
 
 结构（关键）：
-  docs/<cat>/<笔记名>/index.md
-  docs/<cat>/<笔记名>/images/...
+  docs/<cat>/<文章名>.md
+  docs/<cat>/images/<文章名>-<原图片名>...
 
-每篇笔记的图片都待在自己文件夹里。即使两篇笔记都有 images/figure1.png，
-也分别在 docs/math/甲/images/ 与 docs/physics/乙/images/，互不覆盖；
-相对链接 images/xxx.png 依旧有效，无需任何路径改写。
+文章不再使用“文章名/index.md”文件夹，因此不会在 MkDocs 左侧栏中产生额外的第三级目录。
+图片集中在目标二级目录的 images/ 下，并使用文章名前缀避免不同文章之间的同名图片冲突；
+脚本会同步改写 Markdown 中对应的本地图片链接。
 
 用法：
-  python tools/publish.py --src "D:/Projects/Pi/math" --cat math "谱图理论入门P1-综合笔记.md"
-  python tools/publish.py --src "D:/Projects/Pi/physics" --cat physics "另一篇.md"
+  python tools/publish.py --src "D:/Projects/Pi/Pi notes" --cat "ai/AI工具" "笔记.md"
 
 说明：
-  - 重新发布同一篇（内容更新）会刷新该文件夹。
-  - 若两篇不同笔记恰巧同名且发到同一分类，后发的会覆盖先发的——请保证笔记名唯一。
+  - 重新发布同一篇会刷新目标 .md，并覆盖该文章前缀对应的图片。
+  - 图片目录只复制源目录中被文章引用的本地图；远程图片不会复制。
+  - 若文章引用的图片位于源目录的 images/ 下，发布后链接仍为 images/文件名，只是文件名会加文章前缀。
 """
 import argparse
 import pathlib
@@ -23,56 +23,70 @@ import re
 import shutil
 import sys
 
-IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
+IMG_RE = re.compile(r"(!\[[^\]]*\]\()([^)]+)(\))")
 IMG_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"}
+REMOTE_PREFIXES = ("http://", "https://", "//", "data:")
+
+
+def safe_name(path: pathlib.Path) -> str:
+    """用于图片前缀，保留中文但移除路径分隔符等不安全字符。"""
+    return re.sub(r'[<>:"/\\|?*]', "_", path.stem).strip() or "note"
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", required=True, help="笔记所在源目录")
     ap.add_argument("--dest", default="docs", help="项目 docs 目录")
-    ap.add_argument("--cat", default="", help="目标分类子目录（留空放 docs 根）")
+    ap.add_argument("--cat", default="", help="目标二级目录（相对于 docs）")
     ap.add_argument("files", nargs="+", help="要发布的 .md 文件名（相对于 --src）")
     args = ap.parse_args()
 
     src = pathlib.Path(args.src).resolve()
     dest_root = (pathlib.Path(args.dest) / args.cat).resolve()
+    images_root = dest_root / "images"
 
     for name in args.files:
         md = src / name
-        if not md.exists():
+        if not md.is_file():
             print(f"[跳过] 找不到 {md}", file=sys.stderr)
             continue
 
         stem = md.stem
-        note_dir = dest_root / stem
+        target = dest_root / md.name
+        dest_root.mkdir(parents=True, exist_ok=True)
+        images_root.mkdir(parents=True, exist_ok=True)
 
-        # 刷新：同一篇笔记重新发布时清掉旧副本再写
-        if note_dir.exists():
-            shutil.rmtree(note_dir)
-        note_dir.mkdir(parents=True, exist_ok=True)
+        # 刷新同一篇文章及其此前生成的图片，避免旧内容残留。
+        target.write_text(md.read_text(encoding="utf-8"), encoding="utf-8")
+        prefix = safe_name(md)
+        for old_image in images_root.glob(f"{prefix}-*"):
+            if old_image.is_file():
+                old_image.unlink()
 
-        # 1) 笔记存为 index.md
-        shutil.copy2(md, note_dir / "index.md")
-
-        # 2) 同级 images/ 整体复制（与笔记同文件夹，天然隔离，不与他人冲突）
-        imgs_dir = src / "images"
-        if imgs_dir.is_dir():
-            shutil.copytree(imgs_dir, note_dir / "images", dirs_exist_ok=True)
-
-        # 3) 同级被直接引用的孤立本地图（如根目录 01.png）
-        text = (note_dir / "index.md").read_text(encoding="utf-8")
-        for ref in IMG_RE.findall(text):
-            ref = ref.strip()
-            if ref.startswith(("http://", "https://", "//")):
+        text = target.read_text(encoding="utf-8")
+        rewritten = []
+        for match in IMG_RE.finditer(text):
+            ref = match.group(2).strip()
+            if ref.startswith(REMOTE_PREFIXES):
                 continue
-            if ref.startswith("images/") or ref.startswith("./images/"):
-                continue
-            ref_path = (src / ref).resolve()
-            if ref_path.exists() and ref_path.suffix.lower() in IMG_EXTS:
-                shutil.copy2(ref_path, note_dir / ref_path.name)
 
-        print(f"[完成] {name} -> docs/{args.cat}/{stem}/ (index.md + images/)")
+            # Markdown 图片链接可能带标题，例如 images/a.png "caption"。
+            ref_path_text, separator, title = ref.partition(" ")
+            source_image = (src / ref_path_text).resolve()
+            if not source_image.is_file() or source_image.suffix.lower() not in IMG_EXTS:
+                continue
+
+            target_name = f"{prefix}-{source_image.name}"
+            shutil.copy2(source_image, images_root / target_name)
+            new_ref = f"images/{target_name}"
+            if separator:
+                new_ref += f" {title}"
+            rewritten.append((match.group(0), f"{match.group(1)}{new_ref}{match.group(3)}"))
+
+        for old, new in rewritten:
+            text = text.replace(old, new)
+        target.write_text(text, encoding="utf-8")
+        print(f"[完成] {name} -> docs/{args.cat}/{md.name}")
 
 
 if __name__ == "__main__":

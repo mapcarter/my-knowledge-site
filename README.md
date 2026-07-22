@@ -27,14 +27,14 @@ git push                         # Actions 自动构建并部署到 GitHub Pages
 
 ## 发布已有笔记（含图片）
 
-笔记若自带 `images/` 子文件夹，用 `tools/publish.py` 一键同步进 `docs/`。脚本会为**每篇笔记建一个文件夹**（`docs/<分类>/<笔记名>/index.md` + 同文件夹 `images/`），天然避免同名图片冲突，且不改任何路径：
+使用 `tools/publish.py` 将文章直接同步到二级目录，避免在左侧栏产生第三级文章目录：
 
 ```bash
-python tools/publish.py --src "D:/Projects/Pi/math" --cat math "谱图理论入门P1-综合笔记.md"
-python tools/publish.py --src "D:/Projects/Pi/physics" --cat physics "另一篇.md"
+python tools/publish.py --src "D:/Projects/Pi/Pi notes" --cat "ai/AI工具" "Pi Agent 工具操作速查笔记.md"
+python tools/publish.py --src "D:/Projects/Pi/math" --cat "math/谱图理论" "谱图理论入门P1-综合笔记.md"
 ```
 
-详见手册 §3.1（图片不用集中、不用改路径；同名图片靠"每篇一个文件夹"隔离）。
+脚本输出 `docs/<一级目录>/<二级目录>/<文章>.md`。文章引用的本地图片会复制到该二级目录的 `images/`，并自动改名为“文章名前缀-原文件名”，同时改写 Markdown 图片链接，避免同名图片冲突。详见手册 §3.1。
 
 ## 重新生成字体子集（新增内容含生僻字时）
 
