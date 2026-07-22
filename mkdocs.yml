@@ -8,7 +8,6 @@ theme:
   language: zh
   font: false                                  # 禁用 Google Fonts（国内慢/被墙），改用自托管思源宋体
   features:
-    - navigation.tabs
     - navigation.sections
     - navigation.top
     - navigation.tracking
@@ -16,7 +15,6 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
-    - content.action.edit
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -53,6 +51,8 @@ markdown_extensions:
   - toc:
       permalink: true
       toc_depth: 3
+      slugify: !!python/name:pymdownx.slugs.uslugify
+      separator: ""
 
 plugins:
   - search:
@@ -61,7 +61,7 @@ plugins:
 # ===== 公式渲染必须有这两个 JS，否则 LaTeX 不显示 =====
 extra_javascript:
   - javascripts/mathjax.js
-  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 # ===== 自托管思源宋体（中文衬线）替代 Google Fonts =====
 extra_css:
