@@ -45,11 +45,13 @@ markdown_extensions:
   - pymdownx.arithmatex:        # 公式支持（科研必备）
       generic: true
   - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - attr_list
   - md_in_html
   - tables
   - toc:
-      permalink: true
+      permalink: false
       toc_depth: 3
       slugify: !!python/name:pymdownx.slugs.uslugify
       separator: ""
