@@ -15,7 +15,7 @@ hide:
 -   :material-robot:{ .lg .middle } **AI 与大模型**
     ---
     Prompt 工程、LLM 综述、Agent 实践。
-    [:octicons-arrow-right-24: 进入](./ai/index.md)
+    [:octicons-arrow-right-24: 进入](./ai/AI与大模型/index.md)
 
 -   :material-graph:{ .lg .middle } **交通预测研究**
     ---
