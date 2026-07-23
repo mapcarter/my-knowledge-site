@@ -6,3 +6,10 @@ __pycache__/
 vendor/
 glyphs.txt
 glyphs_mono.txt
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
